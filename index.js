@@ -5,46 +5,44 @@ const json2html = require('json2html');
 
 class CssReportGeneratorPlugin {
     constructor(options) {
-        this.options = options;
+        this.options = Object.assign({
+            reporters: ['html', 'json']
+        }, options);
     }
 
     apply(compiler) {
         if (this.options.disabled) { return null; }
-        compiler.plugin('done', () => {
-            this.generateRaports();
+        return compiler.plugin('done', () => {
+            this.generateReports();
         });
     }
 
-    generateRaports() {
-        this.options.inputFilesPrefixes.forEach(name => { this.generateRaport(name); });
+    generateReports() {
+        this.options.inputFilesPrefixes.forEach(this.generateReport.bind(this));
     }
 
-    generateRaport(name) {
+    generateReport(name) {
         let fileName = this.getCSSFileName(name),
             css = this.getCSSFile(fileName),
             statsJSON = cssstats(css);
-        this.createFiles(name + this.options.outputSuffix, statsJSON);
+        this.writeFiles (name + this.options.outputSuffix, statsJSON);
     }
 
     getCSSFileName(name) {
         let files = fs.readdirSync(this.options.inputPath),
-            fileName;
-        files.forEach(file => {
-            let currFileName = path.join(file);
-            if (currFileName.includes(name)) {
-                fileName = currFileName;
-            }
-        });
+            fileName = files.find(file => {
+                return path.join(file).includes(name);
+            });
         if (fileName) { return fileName; }
         else { throw new Error("CSS files are missing!"); }
     }
 
     getCSSFile(name) {
-        return fs.readFileSync(this.options.inputPath + "/" + name, 'utf8')
+        return fs.readFileSync(path.join(this.options.inputPath, name), 'utf8')
     }
 
-    createFiles(name, json) {
-        let reporters = this.options.reporters ? this.options.reporters : ['html', 'json'];
+    writeFiles (name, json) {
+        let reporters = this.options.reporters;
 
         if (reporters.includes('html')) {
             let html = json2html.render(json);
@@ -56,7 +54,7 @@ class CssReportGeneratorPlugin {
     }
 
     writeFile(name, data, extension) {
-        fs.writeFileSync(this.options.outputPath + "/" + name + extension, data);
+        fs.writeFileSync(path.join(this.options.outputPath, name) + extension, data);
     }
 }
 
