@@ -12,7 +12,7 @@ class CssReportGeneratorPlugin {
 
     apply(compiler) {
         if (this.options.disabled) { return null; }
-        return compiler.plugin('done',this.generateReports.bind(this));
+        return compiler.plugin('done', this.generateReports.bind(this));
     }
 
     generateReports() {
@@ -29,7 +29,7 @@ class CssReportGeneratorPlugin {
     getCSSFileName(name) {
         let files = fs.readdirSync(this.options.inputPath),
             fileName = files.find(file => {
-                return path.join(file).includes(name);
+                return file.includes(name);
             });
         if (fileName) { return fileName; }
         else { throw new Error("CSS files are missing!"); }
