@@ -28,8 +28,6 @@
     "css-statistics": "^0.1.0",
     "fs-extra": "^4.0.2",
     "json2html": "0.0.8",
-    "nyc": "^11.2.1",
-    "path": "^0.12.7",
     "webpack": "^3.6.0"
   }
 }

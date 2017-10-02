@@ -1,11 +1,13 @@
 import test from 'ava';
 import fs from 'fs-extra';
 import webpack from 'webpack';
-import CSSStatsPlugin from '../index.js';
+import WebpackCSSStatsPlugin from '../index.js';
 import path from 'path';
-var pluginOptions = {
+import os from 'os'
+
+const pluginOptions = {
     outputSuffix: "-CSSRaport",
-    outputPath: "./test/output",
+    outputPath: os.tmpdir(),
     inputFilesPrefixes: ["example"],
     inputPath: "./test/exampleCSS"
 },
@@ -18,38 +20,28 @@ compilerOptions = {
         filename: 'test'
     },
     plugins: [
-        new CSSStatsPlugin(pluginOptions)
+        new WebpackCSSStatsPlugin(pluginOptions)
     ]
 };
 
 test('plugin is defined', t => {
-    t.truthy(CSSStatsPlugin);
+    t.truthy(WebpackCSSStatsPlugin);
 });
 
-test('webpack integrate with plugin', t => {
-    var compiler = webpack(compilerOptions);
-
-    return new Promise((resolve, reject) => {
+test('webpack integrate with plugin', async t => {
+    let compiler = webpack(compilerOptions);
+    let result = await new Promise((resolve, reject) => {
         compiler.run((err, stats) => {
             if (err) {
                 return reject(err);
             }
             resolve(stats);
         })
-    })
-    .catch(err => {
-        t.fail(err);
-    })
-    .then(result => {
-        var testedFilesPrefix = pluginOptions.outputPath + "/" + pluginOptions.inputFilesPrefixes + pluginOptions.outputSuffix;
-        if (fs.exists(testedFilesPrefix + ".html") && fs.exists(testedFilesPrefix + ".json")) {
-            fs.removeSync(testedFilesPrefix + ".html");
-            fs.removeSync(testedFilesPrefix + ".json");
-            t.pass(result);
-        } else {
-            fs.removeSync(testedFilesPrefix + ".html");
-            fs.removeSync(testedFilesPrefix + ".json");
-            t.fail();
-        }
     });
+    let testedFilesPrefixes = pluginOptions.outputPath + "/" + pluginOptions.inputFilesPrefixes + pluginOptions.outputSuffix
+    if (fs.existsSync(testedFilesPrefixes + ".html", 'utf8') && fs.existsSync(testedFilesPrefixes + ".json", 'utf8')) {
+        t.pass(result);
+    } else {
+        t.fail();
+    }
 });

@@ -1,60 +1,63 @@
-var fs = require('fs-extra'),
-    path = require('path'),
-    cssstats = require('css-statistics'),
-    json2html = require('json2html');
+const fs = require('fs-extra');
+const path = require('path');
+const cssstats = require('css-statistics');
+const json2html = require('json2html');
 
-module.exports = CssReportGeneratorPlugin;
+class CssReportGeneratorPlugin {
+    constructor(options) {
+        this.options = options;
+    }
 
-function CssReportGeneratorPlugin(options) {
-    this.options = options;
-}
-
-CssReportGeneratorPlugin.prototype.apply = function(compiler) {
-    var that = this;
-    if (!this.options.disabled) {
-        compiler.plugin('done', function() {
-            that.generateRaports();
-            console.log("Generated CSS raports!");
+    apply(compiler) {
+        if (this.options.disabled) { return null; }
+        compiler.plugin('done', () => {
+            this.generateRaports();
         });
     }
-};
 
-CssReportGeneratorPlugin.prototype.generateRaports = function () {
-    fs.emptyDir(this.options.outputPath, err => {
-        if (err) {
-            return console.log(err);
+    generateRaports() {
+        this.options.inputFilesPrefixes.forEach(name => { this.generateRaport(name); });
+    }
+
+    generateRaport(name) {
+        let fileName = this.getCSSFileName(name),
+            css = this.getCSSFile(fileName),
+            statsJSON = cssstats(css);
+        this.createFiles(name + this.options.outputSuffix, statsJSON);
+    }
+
+    getCSSFileName(name) {
+        let files = fs.readdirSync(this.options.inputPath),
+            fileName;
+        files.forEach(file => {
+            let currFileName = path.join(file);
+            if (currFileName.includes(name)) {
+                fileName = currFileName;
+            }
+        });
+        if (fileName) { return fileName; }
+        else { throw new Error("CSS files are missing!"); }
+    }
+
+    getCSSFile(name) {
+        return fs.readFileSync(this.options.inputPath + "/" + name, 'utf8')
+    }
+
+    createFiles(name, json) {
+        let reporters = this.options.reporters ? this.options.reporters : ['html', 'json'];
+
+        if (reporters.includes('html')) {
+            let html = json2html.render(json);
+            this.writeFile(name, html, ".html")
         }
-        this.options.inputFilesPrefixes.forEach(function (name) {
-            this.generateRaport(name);
-        }.bind(this));
-    });
-}
-
-CssReportGeneratorPlugin.prototype.generateRaport = function (name) {
-    var fileName = this.getCSSFileName(name);
-        css = this.getCSSFile(fileName);
-        statsJSON = cssstats(css);
-    this.createFiles(name + this.options.outputSuffix, statsJSON);
-}
-
-CssReportGeneratorPlugin.prototype.getCSSFileName = function (name) {
-    var files = fs.readdirSync(this.options.inputPath);
-    for (var i = 0 ; i < files.length ; i++) {
-        var fileName = path.join(files[i]);
-        if (fileName.includes(name)) {
-            return fileName;
+        if (reporters.includes('json')) {
+            this.writeFile(name, JSON.stringify(json), ".json");
         }
     }
-    console.log(name + " css file missing!")
-    process.exit(-1);
+
+    writeFile(name, data, extension) {
+        fs.writeFileSync(this.options.outputPath + "/" + name + extension, data);
+    }
 }
 
-CssReportGeneratorPlugin.prototype.getCSSFile = function (name) {
-    return fs.readFileSync(this.options.inputPath + "/" + name, 'utf8')
-}
-
-CssReportGeneratorPlugin.prototype.createFiles = function (name, json) {
-    var html = json2html.render(json);
-    fs.outputFileSync(this.options.outputPath + "/" + name + ".html", html);
-    fs.outputFileSync(this.options.outputPath + "/" + name + ".json", json);
-}
+module.exports = CssReportGeneratorPlugin;
