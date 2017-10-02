@@ -15,10 +15,10 @@ plugins: [
   new CssReportGeneratorPlugin({
       disabled: false // Optional: disable plugin
       outputSuffix: '-CSSRaport' // Required: suffix for generated files
-     outputPath: 'path' // Required: output path
-     inputFilesPrefixes: ['example', 'example2'], // Required: input files prefixes
-     inputPath: 'path', // Required: input path
-     reporters: ['html, 'json'] // Optional: report extensions default value ['html, 'json']
+      outputPath: 'path' // Required: output path
+      inputFilesPrefixes: ['example', 'example2'], // Required: input files prefixes
+      inputPath: 'path', // Required: input path
+      reporters: ['html, 'json'] // Optional: report extensions default value ['html, 'json']
   })
 ]
 ``` 
