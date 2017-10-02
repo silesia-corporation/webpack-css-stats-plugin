@@ -2,31 +2,27 @@ import os from 'os';
 import path from 'path';
 import WebpackCSSStatsPlugin from '../..';
 
-const pluginOptions = {
-    outputSuffix: "-CSSRaport",
-    outputPath: os.tmpdir(),
-    inputFilesPrefixes: ["example"],
-    inputPath: path.join("test/fixtures")
-};
-
-const compilerOptions = {
-    entry: {
-        test: './index.js'
-    },
-    output: {
-        path: path.resolve(process.cwd(), 'test/output'),
-        filename: 'test'
-    },
-    plugins: [
-        new WebpackCSSStatsPlugin(pluginOptions)
-    ]
-};
-
 export default {
-    getCompilerOptions: function () {
-        return compilerOptions;
+    getCompilerOptions: function (pluginOptions) {
+        return {
+            entry: {
+                test: './index.js'
+            },
+            output: {
+                path: path.resolve(process.cwd(), 'test/output'),
+                filename: 'test'
+            },
+            plugins: [
+                new WebpackCSSStatsPlugin(pluginOptions)
+            ]
+        };
     },
     getPluginOptions: function () {
-        return pluginOptions;
+        return {
+            outputSuffix: "-CSSRaport" + Math.random().toString(36).substring(4),
+            outputPath: os.tmpdir(),
+            inputFilesPrefixes: ["example"],
+            inputPath: path.join("test/fixtures")
+        };
     }
 };
