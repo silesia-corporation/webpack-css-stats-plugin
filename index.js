@@ -12,9 +12,7 @@ class CssReportGeneratorPlugin {
 
     apply(compiler) {
         if (this.options.disabled) { return null; }
-        return compiler.plugin('done', () => {
-            this.generateReports();
-        });
+        return compiler.plugin('done',this.generateReports.bind(this));
     }
 
     generateReports() {
@@ -23,7 +21,7 @@ class CssReportGeneratorPlugin {
 
     generateReport(name) {
         let fileName = this.getCSSFileName(name),
-            css = this.getCSSFile(fileName),
+            css = this.readFile(fileName),
             statsJSON = cssstats(css);
         this.writeFiles (name + this.options.outputSuffix, statsJSON);
     }
@@ -37,7 +35,7 @@ class CssReportGeneratorPlugin {
         else { throw new Error("CSS files are missing!"); }
     }
 
-    getCSSFile(name) {
+    readFile(name) {
         return fs.readFileSync(path.join(this.options.inputPath, name), 'utf8')
     }
 
@@ -46,15 +44,15 @@ class CssReportGeneratorPlugin {
 
         if (reporters.includes('html')) {
             let html = json2html.render(json);
-            this.writeFile(name, html, ".html")
+            this.writeFile(name, html, "html")
         }
         if (reporters.includes('json')) {
-            this.writeFile(name, JSON.stringify(json), ".json");
+            this.writeFile(name, JSON.stringify(json), "json");
         }
     }
 
     writeFile(name, data, extension) {
-        fs.writeFileSync(path.join(this.options.outputPath, name) + extension, data);
+        fs.writeFileSync(path.join(this.options.outputPath, name) + "." + extension, data);
     }
 }
 
